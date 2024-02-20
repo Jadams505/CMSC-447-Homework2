@@ -84,6 +84,27 @@ def db_fetch():
     c.close()
     return data
 
+def db_fetch_form(name = None, id = None, points = None):
+    db = get_db()
+    c = db.cursor()
+    print(name, id, points)
+
+    name_str =  f"name!='{name}'" if name == '' else f"name='{name}'"
+    id_str = f"id!='{id}'" if id == '' else f"id='{id}'"
+    points_str = f"points!='{points}'" if points == '' else f"points='{points}'"
+
+    if(name is not None and id is not None and points is not None):
+        print('exec')
+        c.execute(f"""
+                  SELECT * FROM data 
+                  WHERE {name_str} 
+                  AND {id_str}
+                  AND {points_str}""")
+
+    data = c.fetchall()
+    c.close()
+    return data
+
 
 @app.route('/')
 def index():
@@ -111,11 +132,25 @@ def create():
 
     return render_template("create.html")
 
-@app.route('/search/')
+@app.route('/search/', methods=['GET'])
 def search():
-    fetch = db_fetch()
+    try:
+        name = request.args.get('name')
+        id = request.args.get('id')
+        points = request.args.get('points')
+        print("search", name)
 
-    return render_template("search.html", data=fetch)
+        if (name or id or points):
+            # validate this
+            data = db_fetch_form(name, id, points)
+
+            message = "Success"
+            return render_template("search.html", data=data)
+        
+        return render_template("search.html", data=[])
+        
+    except:
+        return redirect(url_for('fail', page='search'))
 
 @app.route('/success/<page>')
 def success(page):
