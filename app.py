@@ -1,4 +1,4 @@
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, url_for, request, redirect
 import sqlite3
 
 database = "database.db"
@@ -66,9 +66,42 @@ def populate_defaults():
     c.close()
     db.commit()
 
+def db_insert(name: str, id: int, points: int):
+    db = get_db()
+    c = db.cursor()
+    query = f"INSERT INTO data VALUES ('{name}', '{id}', '{points}')"
+    c.execute(query)
+
+    db.commit()
+    c.close()
+
+
 @app.route('/')
 def index():
     return render_template("index.html")
+
+@app.route('/create/', methods = ['POST', 'GET'])
+def create():
+    if request.method == 'POST':
+        message = ""
+        try:
+            name = request.form['name']
+            id = request.form['id']
+            points = request.form['points']
+            print("create")
+            db_insert(name, id, points)
+
+            message = "Success"
+            return redirect(url_for('success', page='create'))
+        except:
+            message = "Failure to create user"
+            print("create failed")
+
+    return render_template("create.html")
+
+@app.route('/success/<page>')
+def success(page):
+    return render_template("action_success.html", page=url_for(page))
 
 if __name__ == "__main__":
     app.run(debug=True)

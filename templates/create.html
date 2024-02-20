@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Create{% endblock %}
+
+{% block body %}
+
+<div class="container my-5">
+
+    <div class="row">
+
+        <div class="col-lg-3 col-sm-1">
+
+        </div>
+
+        <div class="col-lg-6 col-sm-10">
+            <form action="{{url_for('create')}}" method="POST">
+                
+                <div class="col row-cols-1 bg-secondary-subtle">
+                    <h2 class="bg-dark text-center text-white">Create User</h2>
+                    <div class="container my-5">
+                        <label for: "name">Name</label>
+                        <input class="form-control" type ="text" name="name" required></input>
+                    </div>
+
+                    <div class="container my-5">
+                        <label for: "id">ID</label>
+                        <input class="form-control" type="number" name="id" required></input>
+                    </div>
+                    
+                    <div class="container my-5">
+                        <label for: "points">Points</label>
+                        <input class="form-control" type="number" name="points" required></input>
+                    </div>
+
+                    <div class="container my-5">
+                        <div class="row row-cols-lg-3 row-cols-sm-1 m-5">
+                            <button type="submit" class="btn btn-secondary">Submit</button>
+                            <div></div>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+            </form>
+        </div>
+
+        <div class="col-lg-3 col-sm-1">
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
