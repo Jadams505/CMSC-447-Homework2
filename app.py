@@ -71,14 +71,25 @@ def db_insert(name: str, id: int, points: int):
     c = db.cursor()
     query = f"INSERT INTO data VALUES ('{name}', '{id}', '{points}')"
     c.execute(query)
-
     db.commit()
     c.close()
+
+def db_fetch():
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("SELECT name, id, points FROM data")
+
+    data = c.fetchall()
+    c.close()
+    return data
 
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    fetch = db_fetch()
+
+    return render_template("index.html", data=fetch)
 
 @app.route('/create/', methods = ['POST', 'GET'])
 def create():
@@ -89,19 +100,30 @@ def create():
             id = request.form['id']
             points = request.form['points']
             print("create")
+            # this is SQL injection prone fix this later
             db_insert(name, id, points)
 
             message = "Success"
             return redirect(url_for('success', page='create'))
         except:
             message = "Failure to create user"
-            print("create failed")
+            return redirect(url_for('fail', page='create'))
 
     return render_template("create.html")
+
+@app.route('/search/')
+def search():
+    fetch = db_fetch()
+
+    return render_template("search.html", data=fetch)
 
 @app.route('/success/<page>')
 def success(page):
     return render_template("action_success.html", page=url_for(page))
+
+@app.route('/fail/<page>')
+def fail(page):
+    return render_template("action_fail.html", page=url_for(page))
 
 if __name__ == "__main__":
     app.run(debug=True)
