@@ -84,7 +84,7 @@ def db_fetch():
     c.close()
     return data
 
-def db_fetch_form(name = None, id = None, points = None):
+def db_fetch_form(name = '', id = '', points = ''):
     db = get_db()
     c = db.cursor()
     print(name, id, points)
@@ -93,13 +93,12 @@ def db_fetch_form(name = None, id = None, points = None):
     id_str = f"id!='{id}'" if id == '' else f"id='{id}'"
     points_str = f"points!='{points}'" if points == '' else f"points='{points}'"
 
-    if(name is not None and id is not None and points is not None):
-        print('exec')
-        c.execute(f"""
-                  SELECT * FROM data 
-                  WHERE {name_str} 
-                  AND {id_str}
-                  AND {points_str}""")
+    print('exec')
+    c.execute(f"""
+                SELECT * FROM data 
+                WHERE {name_str} 
+                AND {id_str}
+                AND {points_str}""")
 
     data = c.fetchall()
     c.close()
@@ -116,6 +115,25 @@ def db_delete(id):
     c.close()
     
     return db_fetch()
+
+def db_update(id_key, name='', id='', points=''):
+    db = get_db()
+    c = db.cursor()
+
+    name_str =  f"name='{name}'" if name else ''
+    id_str = f"id='{id}'" if id else ''
+    points_str = f"points='{points}'" if points else ''
+
+    if(name_str and id_str and points_str):
+        c.execute(f"""
+                    UPDATE data 
+                    SET {name_str},
+                    {id_str},
+                    {points_str}
+                    WHERE id = {id_key}""")
+        db.commit()
+
+    c.close()
 
 @app.route('/')
 def index():
@@ -151,7 +169,7 @@ def search():
         points = request.args.get('points')
         print("search", name)
 
-        if (name or id or points):
+        if (name or id or points or True):
             # validate this
             data = db_fetch_form(name, id, points)
 
@@ -177,6 +195,49 @@ def delete():
             return redirect(url_for('fail', page='delete'))
         
     return render_template("delete.html", data=data)
+
+@app.route('/update/', methods=['POST', 'GET'])
+def update():
+    data = db_fetch()
+    if(request.method == "POST"):
+        try:
+            id = request.form['id']
+            return redirect(url_for('update_form', id=id))
+            
+        except:
+            return redirect(url_for('fail', page='update'))
+        
+    return render_template("update.html", data=data)
+
+@app.route('/update/form/', methods=['POST', 'GET'])
+def update_form():
+    try:
+        id = request.args['id']
+
+        if(request.method == "GET"):
+            print('form-get')
+        
+            data = next(db_fetch_form(id=id).__iter__(), None)
+
+            if data is not None:
+                name = data[0]
+                points = data[2]
+                return render_template("update_form.html", name=name, id=id, points=points)
+            
+        elif(request.method == "POST"):
+            try:
+                new_id = request.form['id']
+                new_name = request.form['name']
+                new_points = request.form['points']
+                data = db_update(id_key=id, id=new_id, name=new_name, points=new_points)
+                return redirect(url_for('success', page='update'))
+            except:
+                return redirect(url_for('fail', page='update'))
+    except:
+        return redirect(url_for('fail', page='update'))
+            
+    
+    
 
 @app.route('/success/<page>')
 def success(page):
