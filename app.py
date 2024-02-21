@@ -105,6 +105,17 @@ def db_fetch_form(name = None, id = None, points = None):
     c.close()
     return data
 
+def db_delete(id):
+    db = get_db()
+    c = db.cursor()
+
+    c.execute(f"DELETE FROM data WHERE id='{id}'")
+
+    db.commit()
+
+    c.close()
+    
+    return db_fetch()
 
 @app.route('/')
 def index():
@@ -151,6 +162,21 @@ def search():
         
     except:
         return redirect(url_for('fail', page='search'))
+    
+@app.route('/delete/', methods=['POST', 'GET'])
+def delete():
+    data = db_fetch()
+    if(request.method == "POST"):
+        try:
+            id = request.form['id']
+            # validate this
+            data = db_delete(id)
+            return render_template("delete.html", data=data)
+            
+        except:
+            return redirect(url_for('fail', page='delete'))
+        
+    return render_template("delete.html", data=data)
 
 @app.route('/success/<page>')
 def success(page):
