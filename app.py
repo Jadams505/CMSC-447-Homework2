@@ -1,5 +1,5 @@
 from flask import Flask, g, render_template, url_for, request, redirect
-from database import db_fetch, db_delete, db_fetch_form, db_insert, db_update
+from database import db_fetch, db_delete, db_fetch_form, db_insert, db_update, db_validate_id
 
 app = Flask(__name__)
 
@@ -24,16 +24,25 @@ def create():
             id = request.form['id']
             points = request.form['points']
             print("create")
-            # this is SQL injection prone fix this later
+
+            data = db_validate_id(id)
+            print(data)
+            if(data is not None):
+                message = f"A user with id {id} already exists please use a different id"
+                return redirect(url_for('fail', page='create', message=message))
+
             db_insert(name, id, points)
 
-            message = "Success"
-            return redirect(url_for('success', page='create'))
-        except:
-            message = "Failure to create user"
-            return redirect(url_for('fail', page='create'))
+            message = f"The user {name} (id:{id}) was added with {points} points"
+            return redirect(url_for('success', page='create', message=message))
+        except Exception as e:
+            print(e)
+            return redirect(url_for('fail', page='create', message=None))
 
     return render_template("create.html")
+
+def test():
+    return 'testing'
 
 @app.route('/search/', methods=['GET'])
 def search():
@@ -43,14 +52,11 @@ def search():
         points = request.args.get('points')
         print("search", name)
 
-        if (name or id or points or True):
-            # validate this
-            data = db_fetch_form(name, id, points)
+        # validate this
+        data = db_fetch_form(name, id, points)
 
-            message = "Success"
-            return render_template("search.html", data=data)
-        
-        return render_template("search.html", data=[])
+        message = "Success"
+        return render_template("search.html", data=data, message=message)
         
     except:
         return redirect(url_for('fail', page='search'))
@@ -60,6 +66,7 @@ def delete():
     data = db_fetch()
     if(request.method == "POST"):
         try:
+            print('delete')
             id = request.form['id']
             # validate this
             data = db_delete(id)
@@ -112,11 +119,20 @@ def update_form():
 
 @app.route('/success/<page>')
 def success(page):
-    return render_template("action_success.html", page=url_for(page))
+    try:
+        message = request.args.get('message', None)
+        return render_template("action_success.html", page=url_for(page), message=message)
+    except:
+        return "Something has gone wrong. Is the URL incorrect?"
+    
 
 @app.route('/fail/<page>')
 def fail(page):
-    return render_template("action_fail.html", page=url_for(page))
+    try:
+        message = request.args.get('message', None)
+        return render_template("action_fail.html", page=url_for(page), message=message)
+    except:
+        return "Something has gone wrong. Is the URL incorrect?"
 
 if __name__ == "__main__":
     app.run(debug=True)

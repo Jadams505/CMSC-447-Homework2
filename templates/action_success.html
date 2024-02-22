@@ -4,7 +4,38 @@
 
 {% block body %}
 
-<h1>Action Successful</h1>
-<a href="{{ page }}">Go Back</a>
+<div class="container my-5">
+
+    <div class="row">
+
+        <div class="col-lg-3 col-sm-1">
+
+        </div>
+
+        <div class="col-lg-6 col-sm-10">
+            
+            <div class="col row-cols-1 bg-secondary-subtle">
+                <h2 class="bg-dark text-center text-white">Action Successful</h2>
+                <div class="container text-center my-4">
+                    <p>Your action was successful.</p>
+                    {% if message %}
+                    <p>{{ message }}</p>
+                    {% endif %}
+                    <p>Select Go Back to return to the page.</p>
+                </div>
+                
+                <a class="btn btn-secondary" href="{{ page }}">Go Back</a>
+            </div>
+                
+        </div>
+
+        <div class="col-lg-3 col-sm-1">
+
+        </div>
+
+    </div>
+
+</div>
+
 
 {% endblock %}

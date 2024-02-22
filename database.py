@@ -78,6 +78,16 @@ def db_update(id_key, name='', id='', points=''):
 
     c.close()
 
+def db_validate_id(id):
+    db = get_db()
+    c = db.cursor()
+
+    c.execute(f"SELECT * FROM data WHERE id={id}")
+    data = c.fetchone()
+    c.close()
+    return data
+
+
 initial_data = [
     {
         "name": "Steve Smith",
