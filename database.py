@@ -3,6 +3,11 @@ import sqlite3
 
 database = "database.db"
 
+# Database consist of:
+# Name
+# ID - should be unique / positive?
+# Points - I'm gonna allow negative points
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -12,8 +17,8 @@ def get_db():
 def db_insert(name: str, id: int, points: int):
     db = get_db()
     c = db.cursor()
-    query = f"INSERT INTO data VALUES ('{name}', '{id}', '{points}')"
-    c.execute(query)
+    query = f"INSERT INTO data VALUES (?, ?, ?)"
+    c.execute(query, (name, id, points))
     db.commit()
     c.close()
 
@@ -32,16 +37,18 @@ def db_fetch_form(name = '', id = '', points = ''):
     c = db.cursor()
     print(name, id, points)
 
-    name_str =  f"name!='{name}'" if name == '' else f"name='{name}'"
-    id_str = f"id!='{id}'" if id == '' else f"id='{id}'"
-    points_str = f"points!='{points}'" if points == '' else f"points='{points}'"
-
+    name_str =  f"name!=@0" if name == '' else f"name=@0"
+    id_str = f"id!=@1" if id == '' else f"id=@1"
+    points_str = f"points!=@2" if points == '' else f"points=@2"
+    print(name_str)
     print('exec')
+    # test';DROP TABLE data; 
+    # greg' OR 1=1 OR '
     c.execute(f"""
                 SELECT * FROM data 
-                WHERE {name_str} 
+                WHERE {name_str}
                 AND {id_str}
-                AND {points_str}""")
+                AND {points_str}""", (name,id,points))
 
     data = c.fetchall()
     c.close()
@@ -51,7 +58,7 @@ def db_delete(id):
     db = get_db()
     c = db.cursor()
 
-    c.execute(f"DELETE FROM data WHERE id='{id}'")
+    c.execute(f"DELETE FROM data WHERE id=@0", (id,))
 
     db.commit()
 
@@ -82,7 +89,7 @@ def db_validate_id(id):
     db = get_db()
     c = db.cursor()
 
-    c.execute(f"SELECT * FROM data WHERE id={id}")
+    c.execute(f"SELECT * FROM data WHERE id=@0", (id,))
     data = c.fetchone()
     c.close()
     return data

@@ -58,7 +58,8 @@ def search():
         message = "Success"
         return render_template("search.html", data=data, message=message)
         
-    except:
+    except Exception as e:
+        print(e)
         return redirect(url_for('fail', page='search'))
     
 @app.route('/delete/', methods=['POST', 'GET'])
