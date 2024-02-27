@@ -1,5 +1,8 @@
 from flask import Flask, g, render_template, url_for, request, redirect
 from database import db_fetch, db_delete, db_fetch_form, db_insert, db_update, db_validate_id
+import random
+
+default_error_message = "Something has gone wrong. Is the URL incorrect?"
 
 app = Flask(__name__)
 
@@ -11,19 +14,21 @@ def close_connection(exception):
 
 @app.route('/')
 def index():
-    fetch = db_fetch()
-
-    return render_template("index.html", data=fetch)
+    try:
+        fetch = db_fetch()
+        return render_template("index.html", data=fetch)
+    except Exception as e:
+        print(e)
+        return redirect(url_for('fail', page='index'))
 
 @app.route('/create/', methods = ['POST', 'GET'])
 def create():
-    if request.method == 'POST':
+    try:
         message = ""
-        try:
+        if request.method == 'POST':
             name = request.form['name']
             id = request.form['id']
             points = request.form['points']
-            print("create")
 
             data = db_validate_id(id)
             print(data)
@@ -35,14 +40,13 @@ def create():
 
             message = f"The user {name} (id:{id}) was added with {points} points"
             return redirect(url_for('success', page='create', message=message))
-        except Exception as e:
-            print(e)
-            return redirect(url_for('fail', page='create', message=None))
-
-    return render_template("create.html")
-
-def test():
-    return 'testing'
+        
+        if request.method == 'GET':
+             return render_template("create.html")
+           
+    except Exception as e:
+        print(e)
+        return redirect(url_for('fail', page='create', message=None))
 
 @app.route('/search/', methods=['GET'])
 def search():
@@ -64,32 +68,36 @@ def search():
     
 @app.route('/delete/', methods=['POST', 'GET'])
 def delete():
-    data = db_fetch()
-    if(request.method == "POST"):
-        try:
+    try:
+        data = db_fetch()
+
+        if(request.method == "POST"):
             print('delete')
             id = request.form['id']
             # validate this
             data = db_delete(id)
-            return render_template("delete.html", data=data)
-            
-        except:
-            return redirect(url_for('fail', page='delete'))
+            return redirect(url_for('delete', data=None))
         
-    return render_template("delete.html", data=data)
+        return render_template("delete.html", data=data)
+            
+    except Exception as e:
+        print(e)
+        return redirect(url_for('fail', page='delete'))
 
 @app.route('/update/', methods=['POST', 'GET'])
 def update():
-    data = db_fetch()
-    if(request.method == "POST"):
-        try:
+    try:
+        if(request.method == "POST"):
             id = request.form['id']
             return redirect(url_for('update_form', id=id))
-            
-        except:
-            return redirect(url_for('fail', page='update'))
         
-    return render_template("update.html", data=data)
+        if request.method == 'GET':
+            data = db_fetch()
+            return render_template("update.html", data=data)
+
+    except Exception as e:
+        print(e)
+        redirect(url_for('fail', page='update'))
 
 @app.route('/update/form/', methods=['POST', 'GET'])
 def update_form():
@@ -97,8 +105,6 @@ def update_form():
         id = request.args['id']
 
         if(request.method == "GET"):
-            print('form-get')
-        
             data = next(db_fetch_form(id=id).__iter__(), None)
 
             if data is not None:
@@ -106,16 +112,17 @@ def update_form():
                 points = data[2]
                 return render_template("update_form.html", name=name, id=id, points=points)
             
+            return redirect(url_for('fail', page='update_form'))
+            
         elif(request.method == "POST"):
-            try:
-                new_id = request.form['id']
-                new_name = request.form['name']
-                new_points = request.form['points']
-                data = db_update(id_key=id, id=new_id, name=new_name, points=new_points)
-                return redirect(url_for('success', page='update'))
-            except:
-                return redirect(url_for('fail', page='update'))
-    except:
+            new_id = request.form['id']
+            new_name = request.form['name']
+            new_points = request.form['points']
+            data = db_update(id_key=id, id=new_id, name=new_name, points=new_points)
+            return redirect(url_for('success', page='update'))
+        
+    except Exception as e:
+        print(e)
         return redirect(url_for('fail', page='update')) 
 
 @app.route('/success/<page>')
@@ -123,8 +130,9 @@ def success(page):
     try:
         message = request.args.get('message', None)
         return render_template("action_success.html", page=url_for(page), message=message)
-    except:
-        return "Something has gone wrong. Is the URL incorrect?"
+    except Exception as e:
+        print (e)
+        return default_error_message
     
 
 @app.route('/fail/<page>')
@@ -132,8 +140,9 @@ def fail(page):
     try:
         message = request.args.get('message', None)
         return render_template("action_fail.html", page=url_for(page), message=message)
-    except:
-        return "Something has gone wrong. Is the URL incorrect?"
+    except Exception as e:
+        print(e)
+        return default_error_message
 
 if __name__ == "__main__":
     app.run(debug=True)
