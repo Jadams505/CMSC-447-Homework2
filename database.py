@@ -134,12 +134,14 @@ initial_data = [
 ]
 
 def populate_defaults():
-    db = get_db()
-    c = db.cursor()
+    con = sqlite3.connect(database)
+    c = con.cursor()
+    c.execute("DROP TABLE data")
+
     c.execute("CREATE TABLE IF NOT EXISTS data (name TEXT, id INTEGER, points INTEGER)")
     for entry in initial_data:
         query = f"INSERT INTO data VALUES ('{entry['name']}', '{entry['id']}', '{entry['points']}')"
         c.execute(query)
 
     c.close()
-    db.commit()
+    con.commit()
