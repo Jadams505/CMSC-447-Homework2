@@ -102,7 +102,7 @@ def update():
 @app.route('/update/form/', methods=['POST', 'GET'])
 def update_form():
     try:
-        id = request.args['id']
+        id = int(request.args['id'])
 
         if(request.method == "GET"):
             data = next(db_fetch_form(id=id).__iter__(), None)
@@ -118,6 +118,12 @@ def update_form():
             new_id = request.form['id']
             new_name = request.form['name']
             new_points = request.form['points']
+
+            data = db_validate_id(new_id)
+            if (data is not None and data[1] != id):
+                message = f"A user with id {new_id} already exists please use a different id"
+                return redirect(url_for('fail', page='update', message=message))
+
             data = db_update(id_key=id, id=new_id, name=new_name, points=new_points)
             return redirect(url_for('success', page='update'))
         
