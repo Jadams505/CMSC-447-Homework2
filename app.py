@@ -1,6 +1,5 @@
 from flask import Flask, g, render_template, url_for, request, redirect
 from database import db_fetch, db_delete, db_fetch_form, db_insert, db_update, db_validate_id
-import random
 
 default_error_message = "Something has gone wrong. Is the URL incorrect?"
 
