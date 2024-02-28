@@ -3,6 +3,11 @@ import sqlite3
 
 database = "database.db"
 
+TABLE_NAME = 'Data'
+TABLE_COL_ID = 'Id'
+TABLE_COL_NAME = 'Name'
+TABLE_COL_POINTS = 'Points'
+
 # Database consist of:
 # Name
 # ID - should be unique / positive?
@@ -17,7 +22,7 @@ def get_db():
 def db_insert(name: str, id: int, points: int):
     db = get_db()
     c = db.cursor()
-    query = f"INSERT INTO data VALUES (?, ?, ?)"
+    query = f"INSERT INTO {TABLE_NAME} VALUES (?, ?, ?)"
     c.execute(query, (name, id, points))
     db.commit()
     c.close()
@@ -26,7 +31,7 @@ def db_fetch():
     db = get_db()
     c = db.cursor()
 
-    c.execute("SELECT name, id, points FROM data")
+    c.execute(f"SELECT {TABLE_COL_NAME}, {TABLE_COL_ID}, {TABLE_COL_POINTS} FROM {TABLE_NAME}")
 
     data = c.fetchall()
     c.close()
@@ -37,15 +42,12 @@ def db_fetch_form(name = '', id = '', points = ''):
     c = db.cursor()
     print(name, id, points)
 
-    name_str =  f"name!=@0" if name == '' else f"name=@0"
-    id_str = f"id!=@1" if id == '' else f"id=@1"
-    points_str = f"points!=@2" if points == '' else f"points=@2"
-    print(name_str)
-    print('exec')
-    # test';DROP TABLE data; 
-    # greg' OR 1=1 OR '
+    name_str =  f"{TABLE_COL_NAME}!=@0" if name == '' else f"{TABLE_COL_NAME}=@0"
+    id_str = f"{TABLE_COL_ID}!=@1" if id == '' else f"{TABLE_COL_ID}=@1"
+    points_str = f"{TABLE_COL_POINTS}!=@2" if points == '' else f"{TABLE_COL_POINTS}=@2"
+
     c.execute(f"""
-                SELECT * FROM data 
+                SELECT * FROM {TABLE_NAME} 
                 WHERE {name_str}
                 AND {id_str}
                 AND {points_str}""", (name,id,points))
@@ -58,7 +60,7 @@ def db_delete(id):
     db = get_db()
     c = db.cursor()
 
-    c.execute(f"DELETE FROM data WHERE id=@0", (id,))
+    c.execute(f"DELETE FROM {TABLE_NAME} WHERE {TABLE_COL_ID}=@0", (id,))
 
     db.commit()
 
@@ -70,13 +72,13 @@ def db_update(id_key, name='', id='', points=''):
     db = get_db()
     c = db.cursor()
 
-    name_str =  f"name='{name}'" if name else ''
-    id_str = f"id='{id}'" if id else ''
-    points_str = f"points='{points}'" if points else ''
+    name_str =  f"{TABLE_COL_NAME}='{name}'" if name else ''
+    id_str = f"{TABLE_COL_ID}='{id}'" if id else ''
+    points_str = f"{TABLE_COL_POINTS}='{points}'" if points else ''
 
     if(name_str and id_str and points_str):
         c.execute(f"""
-                    UPDATE data 
+                    UPDATE {TABLE_NAME} 
                     SET {name_str},
                     {id_str},
                     {points_str}
@@ -89,7 +91,7 @@ def db_validate_id(id):
     db = get_db()
     c = db.cursor()
 
-    c.execute(f"SELECT * FROM data WHERE id=@0", (id,))
+    c.execute(f"SELECT * FROM {TABLE_NAME} WHERE {TABLE_COL_ID}=@0", (id,))
     data = c.fetchone()
     c.close()
     return data
@@ -136,11 +138,11 @@ initial_data = [
 def populate_defaults():
     con = sqlite3.connect(database)
     c = con.cursor()
-    c.execute("DROP TABLE data")
+    c.execute(f"DROP TABLE IF EXISTS {TABLE_NAME}")
 
-    c.execute("CREATE TABLE IF NOT EXISTS data (name TEXT, id INTEGER, points INTEGER)")
+    c.execute(f"CREATE TABLE IF NOT EXISTS {TABLE_NAME} ({TABLE_COL_NAME} TEXT, {TABLE_COL_ID} INTEGER, {TABLE_COL_POINTS} INTEGER)")
     for entry in initial_data:
-        query = f"INSERT INTO data VALUES ('{entry['name']}', '{entry['id']}', '{entry['points']}')"
+        query = f"INSERT INTO {TABLE_NAME} VALUES ('{entry['name']}', '{entry['id']}', '{entry['points']}')"
         c.execute(query)
 
     c.close()
