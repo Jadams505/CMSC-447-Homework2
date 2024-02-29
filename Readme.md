@@ -1,6 +1,5 @@
 # How To Run:
 Install virtualenv  
-Clone the repo in to a folder  
   
 Create a virtual environment:
 `virtualenv env`
